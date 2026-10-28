@@ -33,6 +33,10 @@ export interface WindMetrics {
   p90AbsError: number | null;
   errorP10: number | null;
   errorP90: number | null;
+  /** Share of hours (0–1) where the forecast was above the actual. */
+  overForecastShare: number | null;
+  /** MAE after subtracting the period's average bias from every forecast. */
+  debiasedMae: number | null;
   normalizedMae: number | null;
   meanActual: number | null;
   p10Actual: number | null;

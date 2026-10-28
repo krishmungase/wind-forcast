@@ -3,3 +3,7 @@ export { default as FiltersBar } from './filters-bar';
 export { default as Headline } from './headline';
 export { default as StatStrip } from './stat-strip';
 export { default as ForecastChart } from './forecast-chart';
+export { default as HorizonChart } from './horizon-chart';
+export { default as HourlyErrorChart } from './hourly-error-chart';
+export { default as Takeaways } from './takeaways';
+export { default as MethodNote } from './method-note';

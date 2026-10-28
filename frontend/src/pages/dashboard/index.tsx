@@ -1,6 +1,11 @@
 import { useState } from 'react';
 
-import { useWindMetrics, useWindSeries } from '@/api/wind';
+import {
+  useErrorByHour,
+  useHorizonCurve,
+  useWindMetrics,
+  useWindSeries,
+} from '@/api/wind';
 import { HORIZON } from '@/constants';
 import { useDebounce } from '@/hooks';
 import { formatDay } from '@/lib/format.lib';
@@ -9,8 +14,12 @@ import {
   FiltersBar,
   ForecastChart,
   Headline,
+  HorizonChart,
+  HourlyErrorChart,
+  MethodNote,
   SiteHeader,
   StatStrip,
+  Takeaways,
 } from './components';
 import { DEFAULT_PERIOD, findPeriod } from './lib/periods';
 
@@ -36,6 +45,8 @@ export default function DashboardPage() {
 
   const series = useWindSeries(range, queryHorizon);
   const metrics = useWindMetrics(range, queryHorizon);
+  const curve = useHorizonCurve(range);
+  const hours = useErrorByHour(range, queryHorizon);
 
   return (
     <div className="min-h-screen bg-background">
@@ -66,6 +77,32 @@ export default function DashboardPage() {
           dimmed={series.isPlaceholderData}
           onRetry={() => series.refetch()}
         />
+        <div className="grid gap-6 lg:grid-cols-2">
+          <HorizonChart
+            curve={curve.data}
+            horizon={queryHorizon}
+            onHorizonChange={setHorizon}
+            isError={curve.isError}
+            dimmed={curve.isPlaceholderData}
+            onRetry={() => curve.refetch()}
+          />
+          <HourlyErrorChart
+            hours={hours.data}
+            horizon={queryHorizon}
+            isError={hours.isError}
+            dimmed={hours.isPlaceholderData}
+            onRetry={() => hours.refetch()}
+          />
+        </div>
+        <div className="pt-6">
+          <Takeaways
+            metrics={metrics.data}
+            curve={curve.data}
+            hours={hours.data}
+            horizon={queryHorizon}
+          />
+        </div>
+        <MethodNote />
       </main>
     </div>
   );

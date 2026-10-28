@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Alert02Icon } from '@hugeicons/core-free-icons';
+import { Download04Icon } from '@hugeicons/core-free-icons';
 import {
   CartesianGrid,
   Line,
@@ -12,17 +12,25 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
+import { downloadCsv, toCsv } from '@/lib/csv.lib';
 import {
+  formatDateTime,
   formatDay,
   formatGW,
-  formatGWTick,
   formatLongDateTime,
   formatSignedGW,
   formatTime,
-  formatDateTime,
 } from '@/lib/format.lib';
 import { cn } from '@/lib/utils';
 import type { SeriesPoint, TimeWindow } from '@/types/wind.types';
+import { ACTIVE_DOT, AXIS_PROPS, gwAxisLabel, gwTicks } from '../lib/chart';
+import {
+  ChartCard,
+  ChartError,
+  LegendKey,
+  TooltipRow,
+  TooltipShell,
+} from './chart-parts';
 
 interface ForecastChartProps {
   points: SeriesPoint[] | undefined;
@@ -33,23 +41,13 @@ interface ForecastChartProps {
   onRetry: () => void;
 }
 
+const HEIGHT = 340;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 const chartConfig = {
   actual: { label: 'Actual', color: 'var(--series-actual)' },
   forecast: { label: 'Forecast', color: 'var(--series-forecast)' },
 } satisfies ChartConfig;
-
-const DAY_MS = 24 * 60 * 60 * 1000;
-const Y_STEP_MW = 5000;
-
-/** Round 5 GW gridlines from zero up to just above the highest value. */
-function buildYTicks(points: SeriesPoint[]): number[] {
-  const peak = Math.max(
-    Y_STEP_MW,
-    ...points.map((p) => Math.max(p.actual ?? 0, p.forecast ?? 0))
-  );
-  const top = Math.ceil(peak / Y_STEP_MW) * Y_STEP_MW;
-  return Array.from({ length: top / Y_STEP_MW + 1 }, (_, i) => i * Y_STEP_MW);
-}
 
 /** Pick x-axis ticks that stay readable at any range: hours for short
  *  windows, midnights every N days for longer ones. */
@@ -82,12 +80,36 @@ function buildTicks(points: SeriesPoint[], range: TimeWindow) {
   };
 }
 
+function exportCsv(points: SeriesPoint[], range: TimeWindow, horizon: number) {
+  const csv = toCsv(
+    [
+      'time_utc',
+      'actual_mw',
+      'forecast_mw',
+      'forecast_published_utc',
+      'error_mw',
+    ],
+    points.map((p) => [
+      p.time,
+      p.actual,
+      p.forecast,
+      p.publishTime,
+      p.forecast != null && p.actual != null
+        ? Math.round((p.forecast - p.actual) * 10) / 10
+        : null,
+    ])
+  );
+  downloadCsv(
+    `wind-${range.start.slice(0, 10)}-to-${range.end.slice(0, 10)}-${horizon}h.csv`,
+    csv
+  );
+}
+
 interface TooltipBodyProps {
   active?: boolean;
   payload?: ReadonlyArray<{ payload?: SeriesPoint }>;
 }
 
-// Values lead, series names follow; keyed with short line strokes.
 const TooltipBody = ({ active, payload }: TooltipBodyProps) => {
   const point = active ? payload?.[0]?.payload : undefined;
   if (!point) return null;
@@ -97,26 +119,20 @@ const TooltipBody = ({ active, payload }: TooltipBodyProps) => {
       : null;
 
   return (
-    <div className="grid min-w-52 gap-1.5 rounded-lg border bg-popover px-3 py-2.5 text-xs text-popover-foreground shadow-lg">
-      <p className="font-medium">{formatLongDateTime(point.time)}</p>
-      <Row
+    <TooltipShell title={formatLongDateTime(point.time)}>
+      <TooltipRow
         color="var(--series-actual)"
         value={formatGW(point.actual)}
         label="Actual"
       />
       {point.forecast != null ? (
         <>
-          <Row
+          <TooltipRow
             color="var(--series-forecast)"
             value={formatGW(point.forecast)}
             label="Forecast"
           />
-          <p className="text-muted-foreground">
-            <span className="font-medium text-foreground tabular-nums">
-              {formatSignedGW(error)}
-            </span>{' '}
-            error
-          </p>
+          <TooltipRow value={formatSignedGW(error)} label="Error" />
           {point.publishTime && (
             <p className="text-muted-foreground">
               Published {formatDateTime(point.publishTime)}
@@ -126,38 +142,9 @@ const TooltipBody = ({ active, payload }: TooltipBodyProps) => {
       ) : (
         <p className="text-muted-foreground">Forecasts are hourly</p>
       )}
-    </div>
+    </TooltipShell>
   );
 };
-
-const Row = ({
-  color,
-  value,
-  label,
-}: {
-  color: string;
-  value: string;
-  label: string;
-}) => (
-  <p className="flex items-center gap-2">
-    <span className="h-0.5 w-3 rounded-full" style={{ background: color }} />
-    <span className="font-semibold tabular-nums">{value}</span>
-    <span className="text-muted-foreground">{label}</span>
-  </p>
-);
-
-const LegendKey = ({
-  color,
-  children,
-}: {
-  color: string;
-  children: React.ReactNode;
-}) => (
-  <span className="flex items-center gap-2">
-    <span className="h-0.5 w-4 rounded-full" style={{ background: color }} />
-    {children}
-  </span>
-);
 
 const ForecastChart = ({
   points,
@@ -168,61 +155,56 @@ const ForecastChart = ({
   onRetry,
 }: ForecastChartProps) => {
   const ticks = points ? buildTicks(points, range) : null;
-  const yTicks = buildYTicks(points ?? []);
+  const yTicks = gwTicks(
+    Math.max(
+      0,
+      ...(points ?? []).map((p) => Math.max(p.actual ?? 0, p.forecast ?? 0))
+    ),
+    5000
+  );
 
   return (
-    <section
-      aria-labelledby="forecast-chart-title"
-      className="rounded-xl border bg-card p-4 sm:p-5"
-    >
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div>
-          <h2 id="forecast-chart-title" className="text-lg font-semibold">
-            Actual vs forecast wind generation
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Gigawatts, Great Britain total. Hover for the forecast’s publish
-            time.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-secondary">
+    <ChartCard
+      id="forecast-chart-title"
+      title="Actual vs forecast wind generation"
+      description="Great Britain total. Hover for the forecast’s publish time."
+      aside={
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-secondary">
           <LegendKey color="var(--series-actual)">
             Actual, half-hourly
           </LegendKey>
           <LegendKey color="var(--series-forecast)">
             Forecast, {horizon} h ahead
           </LegendKey>
-        </div>
-      </div>
-
-      {isError ? (
-        <div className="flex h-[340px] flex-col items-center justify-center gap-3 text-center">
-          <HugeiconsIcon
-            icon={Alert02Icon}
-            size={22}
-            className="text-destructive"
-          />
-          <p className="max-w-sm text-sm text-ink-secondary">
-            Couldn’t load wind data. Check that the API is running, then try
-            again.
-          </p>
-          <Button variant="outline" size="sm" onClick={onRetry}>
-            Try again
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={!points?.length}
+            onClick={() => points && exportCsv(points, range, horizon)}
+          >
+            <HugeiconsIcon icon={Download04Icon} size={16} />
+            Download CSV
           </Button>
         </div>
+      }
+    >
+      {isError ? (
+        <ChartError height={HEIGHT} onRetry={onRetry} />
       ) : !points || !ticks ? (
-        <Skeleton className="h-[340px] w-full" />
+        <Skeleton style={{ height: HEIGHT }} className="w-full" />
       ) : (
         <ChartContainer
           config={chartConfig}
+          style={{ height: HEIGHT }}
           className={cn(
-            'aspect-auto h-[340px] w-full transition-opacity',
+            'aspect-auto w-full transition-opacity',
             dimmed && 'opacity-60'
           )}
         >
           <LineChart
             data={points}
             margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
+            accessibilityLayer
           >
             <CartesianGrid vertical={false} stroke="var(--grid)" />
             <XAxis
@@ -237,10 +219,9 @@ const ForecastChart = ({
             <YAxis
               ticks={yTicks}
               domain={[0, yTicks[yTicks.length - 1]]}
-              tickFormatter={(mw: number) => `${formatGWTick(mw)}\u00a0GW`}
-              tickLine={false}
-              axisLine={false}
+              tickFormatter={(mw: number) => gwAxisLabel(mw)}
               width={60}
+              {...AXIS_PROPS}
             />
             <Tooltip
               cursor={{ stroke: 'var(--axis)', strokeWidth: 1 }}
@@ -257,7 +238,7 @@ const ForecastChart = ({
               stroke="var(--color-actual)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, stroke: 'var(--card)', strokeWidth: 2 }}
+              activeDot={ACTIVE_DOT}
               isAnimationActive={false}
             />
             <Line
@@ -266,14 +247,14 @@ const ForecastChart = ({
               stroke="var(--color-forecast)"
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 4, stroke: 'var(--card)', strokeWidth: 2 }}
+              activeDot={ACTIVE_DOT}
               connectNulls
               isAnimationActive={false}
             />
           </LineChart>
         </ChartContainer>
       )}
-    </section>
+    </ChartCard>
   );
 };
 

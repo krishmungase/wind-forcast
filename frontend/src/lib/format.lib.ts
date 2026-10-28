@@ -27,11 +27,6 @@ export function formatPercent(ratio: number | null | undefined): string {
   return `${(ratio * 100).toFixed(1)}%`;
 }
 
-/** Axis tick in GW without unit: 12000 → "12". */
-export function formatGWTick(mw: number): string {
-  return `${Math.round(mw / 1000)}`;
-}
-
 /** "10 Jan, 09:30". */
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
@@ -66,11 +61,6 @@ export function formatTime(iso: string): string {
     minute: '2-digit',
     timeZone: UTC,
   });
-}
-
-/** Hours → "24 h". */
-export function formatHours(hours: number): string {
-  return `${hours} h`;
 }
 
 /** ISO UTC → value for <input type="datetime-local"> (read as UTC). */
