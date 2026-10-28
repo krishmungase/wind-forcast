@@ -44,6 +44,8 @@ def test_summarize_values():
     assert summary["rmse"] == pytest.approx(math.sqrt((200**2 + 300**2) / 2))
     assert summary["mean_actual"] == pytest.approx(4100 / 3)
     assert summary["normalized_mae"] == pytest.approx(250 / (4100 / 3))
+    assert summary["over_forecast_share"] == 0.5  # one of two hours over-forecast
+    assert summary["debiased_mae"] == 250.0  # errors +200, -300 around a -50 mean
 
 
 def test_summarize_empty_returns_none():

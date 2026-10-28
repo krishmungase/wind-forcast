@@ -27,6 +27,10 @@ def _num(value: float | None, digits: int = 1) -> float | None:
     return round(float(value), digits)
 
 
+# Ratios keep more precision than MW values.
+RATIO_KEYS = {"normalized_mae", "over_forecast_share"}
+
+
 @cache
 def chosen_forecasts(horizon: int) -> pd.DataFrame:
     """Selected forecasts for a horizon across the whole month. Static data, so cached."""
@@ -75,7 +79,7 @@ def get_metrics(start: pd.Timestamp, end: pd.Timestamp, horizon: int) -> dict:
     return {
         "horizon": horizon,
         **{
-            key: value if key == "count" else _num(value, 4 if key == "normalized_mae" else 1)
+            key: value if key == "count" else _num(value, 4 if key in RATIO_KEYS else 1)
             for key, value in summary.items()
         },
     }

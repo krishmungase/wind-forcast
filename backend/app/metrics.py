@@ -43,6 +43,9 @@ def summarize(paired: pd.DataFrame, actuals: pd.DataFrame) -> dict | None:
         "p90_abs_error": abs_error.quantile(0.9),
         "error_p10": error.quantile(0.1),
         "error_p90": error.quantile(0.9),
+        "over_forecast_share": float((error > 0).mean()),
+        # Typical miss if this period's average bias had been subtracted from every forecast.
+        "debiased_mae": (error - error.mean()).abs().mean(),
         "normalized_mae": mae / mean_actual if mean_actual else None,
         "mean_actual": mean_actual,
         "p10_actual": actuals["generation"].quantile(0.1),

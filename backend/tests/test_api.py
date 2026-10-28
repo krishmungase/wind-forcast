@@ -46,6 +46,8 @@ def test_metrics_shape():
     assert body["mae"] > 0
     assert body["rmse"] >= body["mae"]
     assert body["p10Actual"] < body["meanActual"]
+    assert 0 <= body["overForecastShare"] <= 1
+    assert body["debiasedMae"] < body["mae"]
 
 
 def test_forecasts_get_worse_with_horizon():

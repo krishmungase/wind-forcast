@@ -42,6 +42,8 @@ class Metrics(CamelModel):
     p90_abs_error: float | None = None
     error_p10: float | None = None
     error_p90: float | None = None
+    over_forecast_share: float | None = None
+    debiased_mae: float | None = None
     normalized_mae: float | None = None
     mean_actual: float | None = None
     p10_actual: float | None = None
