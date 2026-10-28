@@ -21,7 +21,7 @@ from app.config import (
 from app.schemas import Health, HorizonPoint, HourPoint, Meta, Metrics, SeriesPoint
 
 app = FastAPI(
-    title="Wind Forecast Monitor API",
+    title="Windsight API",
     version="0.1.0",
     description="UK national wind generation: actuals (FUELHH) vs forecasts (WINDFOR), "
     "January 2026.",
