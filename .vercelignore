@@ -1,0 +1,13 @@
+# Not needed in the deployment upload.
+PLAN.md
+.git
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+backend/.venv
+backend/tests
+frontend/node_modules
+frontend/dist
+frontend/.env
+.env.local
+.vercel

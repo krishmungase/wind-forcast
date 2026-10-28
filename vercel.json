@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "cd frontend && HUSKY=0 npx --yes pnpm@11.4.0 install --frozen-lockfile",
+  "buildCommand": "cd frontend && npx --yes pnpm@11.4.0 run build",
+  "outputDirectory": "frontend/dist",
+  "functions": {
+    "api/index.py": {
+      "includeFiles": "backend/{app,data}/**",
+      "excludeFiles": "{frontend/**,backend/tests/**,backend/scripts/**,**/__pycache__/**}",
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

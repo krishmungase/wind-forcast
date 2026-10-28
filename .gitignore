@@ -24,3 +24,5 @@ dist/
 
 #plan
 PLAN.md
+.env*
+!.env.example
