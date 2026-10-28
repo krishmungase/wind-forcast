@@ -16,6 +16,7 @@ const ThemeToggle = () => {
     <Button
       variant="ghost"
       size="icon"
+      className="rounded-full"
       aria-label={label}
       title={label}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}

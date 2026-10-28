@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { DashboardPage } from '@/pages';
 import { ThemeProvider } from '@/providers';
+import { PageBackground } from '@/components/shared';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 const queryClient = new QueryClient({
@@ -11,7 +12,8 @@ const queryClient = new QueryClient({
 
 const App = () => {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="wind-ui-theme">
+    <ThemeProvider defaultTheme="dark" storageKey="wind-ui-theme">
+      <PageBackground />
       <Toaster position="bottom-right" closeButton={true} />
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>

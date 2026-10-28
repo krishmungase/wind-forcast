@@ -3,9 +3,9 @@ export const REQUEST_METHOD = {
 } as const;
 
 export const ERROR_MESSAGE = {
-  NETWORK_ERROR: 'Can’t reach the forecast service. Check your connection.',
+  NETWORK_ERROR: "Can't reach the forecast service. Check your connection.",
   INTERNAL_SERVER_ERROR: 'The forecast service hit an error. Try again.',
-  VALIDATION_ERROR: 'That date range or horizon isn’t available.',
+  VALIDATION_ERROR: "That date range or horizon isn't available.",
 } as const;
 
 /** Data window served by the API (UTC; Great Britain is on GMT in January). */

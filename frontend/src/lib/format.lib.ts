@@ -62,13 +62,3 @@ export function formatTime(iso: string): string {
     timeZone: UTC,
   });
 }
-
-/** ISO UTC → value for <input type="datetime-local"> (read as UTC). */
-export function toInputValue(iso: string): string {
-  return iso.slice(0, 16);
-}
-
-/** <input type="datetime-local"> value (treated as UTC) → ISO UTC. */
-export function fromInputValue(value: string): string {
-  return `${value}:00Z`;
-}

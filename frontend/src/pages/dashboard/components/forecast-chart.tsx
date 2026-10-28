@@ -1,9 +1,10 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Download04Icon } from '@hugeicons/core-free-icons';
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Line,
-  LineChart,
   Tooltip,
   XAxis,
   YAxis,
@@ -21,6 +22,7 @@ import {
   formatSignedGW,
   formatTime,
 } from '@/lib/format.lib';
+import { usePrefersReducedMotion } from '@/hooks';
 import { cn } from '@/lib/utils';
 import type { SeriesPoint, TimeWindow } from '@/types/wind.types';
 import { ACTIVE_DOT, AXIS_PROPS, gwAxisLabel, gwTicks } from '../lib/chart';
@@ -154,6 +156,7 @@ const ForecastChart = ({
   dimmed,
   onRetry,
 }: ForecastChartProps) => {
+  const reduced = usePrefersReducedMotion();
   const ticks = points ? buildTicks(points, range) : null;
   const yTicks = gwTicks(
     Math.max(
@@ -167,7 +170,7 @@ const ForecastChart = ({
     <ChartCard
       id="forecast-chart-title"
       title="Actual vs forecast wind generation"
-      description="Great Britain total. Hover for the forecast’s publish time."
+      description="Great Britain total. Hover for the forecast's publish time."
       aside={
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-secondary">
           <LegendKey color="var(--series-actual)">
@@ -201,11 +204,25 @@ const ForecastChart = ({
             dimmed && 'opacity-60'
           )}
         >
-          <LineChart
+          <ComposedChart
             data={points}
             margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
             accessibilityLayer
           >
+            <defs>
+              <linearGradient id="fill-actual" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="0%"
+                  stopColor="var(--series-actual)"
+                  stopOpacity={0.28}
+                />
+                <stop
+                  offset="100%"
+                  stopColor="var(--series-actual)"
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            </defs>
             <CartesianGrid vertical={false} stroke="var(--grid)" />
             <XAxis
               dataKey="time"
@@ -232,14 +249,18 @@ const ForecastChart = ({
                 />
               )}
             />
-            <Line
+            <Area
               dataKey="actual"
               type="monotone"
               stroke="var(--color-actual)"
               strokeWidth={2}
+              fill="url(#fill-actual)"
               dot={false}
               activeDot={ACTIVE_DOT}
-              isAnimationActive={false}
+              isAnimationActive={!reduced}
+              animationBegin={0}
+              animationDuration={900}
+              animationEasing="ease-out"
             />
             <Line
               dataKey="forecast"
@@ -249,9 +270,12 @@ const ForecastChart = ({
               dot={false}
               activeDot={ACTIVE_DOT}
               connectNulls
-              isAnimationActive={false}
+              isAnimationActive={!reduced}
+              animationBegin={200}
+              animationDuration={900}
+              animationEasing="ease-out"
             />
-          </LineChart>
+          </ComposedChart>
         </ChartContainer>
       )}
     </ChartCard>

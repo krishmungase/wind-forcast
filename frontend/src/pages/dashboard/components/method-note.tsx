@@ -8,8 +8,8 @@ const MethodNote = () => (
     </h2>
     <ul className="grid max-w-5xl gap-x-10 gap-y-2 md:grid-cols-2">
       <li>
-        Actual output is Elexon’s half-hourly metered wind generation (FUELHH).
-        Forecasts are Elexon’s national wind forecasts (WINDFOR), published
+        Actual output is Elexon's half-hourly metered wind generation (FUELHH).
+        Forecasts are Elexon's national wind forecasts (WINDFOR), published
         about eight times a day for each hour up to two days ahead.
       </li>
       <li>
@@ -23,8 +23,8 @@ const MethodNote = () => (
       </li>
       <li>
         A likely cause of the lean is curtailment: wind farms paid to switch off
-        lower metered output, while the forecast reflects what the wind could
-        produce. Elexon’s wind data alone can’t confirm this.
+        lower metered output, while the forecast shows what the wind could have
+        produced. Elexon's wind data alone can't confirm this.
       </li>
     </ul>
     <p className="mt-4">

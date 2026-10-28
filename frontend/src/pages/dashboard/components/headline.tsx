@@ -40,18 +40,18 @@ const Headline = ({ metrics, horizon, periodLabel }: HeadlineProps) => {
   const direction = metrics.bias >= 0 ? 'high' : 'low';
 
   return (
-    <div className="space-y-3">
+    <div className=" space-y-4">
       <h1
         aria-live="polite"
-        className="max-w-4xl text-3xl leading-[1.15] font-semibold tracking-tight text-balance sm:text-[2.75rem]"
+        className="max-w-4xl pb-1 text-[2rem] leading-[1.12] font-semibold tracking-[-0.025em] text-balance sm:text-5xl"
       >
         {leadIn(horizon)}, the wind forecast was off by {formatGW(metrics.mae)}{' '}
         in a typical hour, and ran {formatGW(Math.abs(metrics.bias))}{' '}
         {direction} on average.
       </h1>
-      <p className="max-w-3xl text-base text-ink-secondary">
+      <p className="max-w-3xl text-base text-muted-foreground">
         {periodLabel}, measured over {metrics.count.toLocaleString('en-GB')}{' '}
-        delivery hours against Elexon’s metered wind output.
+        delivery hours against Elexon's metered wind output.
       </p>
     </div>
   );

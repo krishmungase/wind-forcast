@@ -1,11 +1,21 @@
-import { useId, useState } from 'react';
+import { useId, type ReactNode } from 'react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
+import {
+  Calendar03Icon,
+  Clock01Icon,
+  InformationCircleIcon,
+} from '@hugeicons/core-free-icons';
 
 import { Slider } from '@/components/ui/slider';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { DATA_WINDOW, HORIZON } from '@/constants';
-import { fromInputValue, toInputValue } from '@/lib/format.lib';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { HORIZON } from '@/constants';
+import { cn } from '@/lib/utils';
 import type { TimeWindow } from '@/types/wind.types';
-import { PERIODS, findPeriod } from '../lib/periods';
+import DateRangePicker from './date-range-picker';
 
 interface FiltersBarProps {
   range: TimeWindow;
@@ -14,8 +24,29 @@ interface FiltersBarProps {
   onHorizonChange: (horizon: number) => void;
 }
 
-const HORIZON_TICKS = [0, 12, 24, 36, 48];
+const HORIZON_TICKS = [0, 6, 12, 24, 36, 48];
 
+function explainHorizon(horizon: number): string {
+  return horizon === 0
+    ? 'Each delivery hour uses the most recent forecast published before it.'
+    : `Each delivery hour uses the latest forecast published at least ${horizon} ${horizon === 1 ? 'hour' : 'hours'} earlier. Day-ahead buying is about 24 hours.`;
+}
+
+const FieldLabel = ({
+  icon,
+  children,
+}: {
+  icon: IconSvgElement;
+  children: ReactNode;
+}) => (
+  <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+    <HugeiconsIcon icon={icon} size={14} className="text-glow" />
+    {children}
+  </span>
+);
+
+/** One compact glass toolbar: delivery period on the left, forecast horizon
+ *  on the right. The horizon explanation sits in a tooltip to save space. */
 const FiltersBar = ({
   range,
   onRangeChange,
@@ -23,99 +54,55 @@ const FiltersBar = ({
   onHorizonChange,
 }: FiltersBarProps) => {
   const id = useId();
-  const activePeriod = findPeriod(range);
-
-  // Draft values let the user type an invalid range without it being sent.
-  const [draft, setDraft] = useState(range);
-  const [prevWindow, setPrevWindow] = useState(range);
-  if (prevWindow !== range) {
-    setPrevWindow(range);
-    setDraft(range);
-  }
-  const draftInvalid = draft.start >= draft.end;
-
-  const updateDraft = (key: keyof TimeWindow, value: string) => {
-    if (!value) return;
-    const next = { ...draft, [key]: fromInputValue(value) };
-    setDraft(next);
-    if (next.start < next.end) onRangeChange(next);
-  };
+  const explanation = explainHorizon(horizon);
 
   return (
     <section
       aria-label="Filters"
-      className="grid gap-6 rounded-xl border bg-card p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)] lg:gap-10"
+      className="panel flex flex-col gap-4 rounded-2xl p-4 lg:flex-row lg:items-center lg:gap-6 lg:px-5 lg:py-3.5"
     >
-      <fieldset className="min-w-0 space-y-3">
-        <legend className="mb-3 text-sm font-medium">Delivery period</legend>
-        <ToggleGroup
-          type="single"
-          variant="outline"
-          spacing={2}
-          value={activePeriod?.id ?? ''}
-          onValueChange={(value) => {
-            const period = PERIODS.find((p) => p.id === value);
-            if (period) onRangeChange({ start: period.start, end: period.end });
-          }}
-          className="flex w-full flex-wrap justify-start"
-        >
-          {PERIODS.map((period) => (
-            <ToggleGroupItem
-              key={period.id}
-              value={period.id}
-              className="h-9 flex-none px-3 text-sm"
-            >
-              {period.label}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+      <div className="flex shrink-0 flex-col gap-2">
+        <FieldLabel icon={Calendar03Icon}>Delivery period</FieldLabel>
+        <DateRangePicker
+          range={range}
+          onRangeChange={onRangeChange}
+          className="h-10 w-full lg:w-64"
+        />
+      </div>
 
-        <div className="flex flex-wrap items-end gap-3">
-          {(['start', 'end'] as const).map((key) => (
-            <label
-              key={key}
-              className="grid gap-1 text-xs text-muted-foreground"
-            >
-              {key === 'start' ? 'From' : 'To'}
-              <input
-                id={`${id}-${key}`}
-                type="datetime-local"
-                step={1800}
-                min={toInputValue(DATA_WINDOW.START)}
-                max={toInputValue(DATA_WINDOW.END)}
-                value={toInputValue(draft[key])}
-                onChange={(e) => updateDraft(key, e.target.value)}
-                aria-invalid={draftInvalid}
-                aria-describedby={
-                  draftInvalid ? `${id}-range-error` : undefined
-                }
-                className="h-9 rounded-md border border-input bg-background px-2.5 text-sm text-foreground tabular-nums shadow-xs focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none aria-invalid:border-destructive"
-              />
-            </label>
-          ))}
-          <span className="pb-2 text-xs text-muted-foreground">
-            UK time (GMT)
-          </span>
-        </div>
-        {draftInvalid && (
-          <p id={`${id}-range-error`} className="text-xs text-destructive">
-            The end of the period must be after the start.
-          </p>
-        )}
-      </fieldset>
+      <div aria-hidden="true" className="hidden h-14 w-px bg-border lg:block" />
 
-      <div className="min-w-0">
-        <div className="mb-3 flex items-baseline justify-between gap-4">
-          <label htmlFor={`${id}-horizon`} className="text-sm font-medium">
-            Forecast horizon
-          </label>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center justify-between gap-3">
+          <FieldLabel icon={Clock01Icon}>
+            <label htmlFor={`${id}-horizon`}>Forecast horizon</label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="What the forecast horizon means"
+                  className="grid size-5 place-items-center rounded-full hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  <HugeiconsIcon icon={InformationCircleIcon} size={14} />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-64 text-pretty">
+                {explanation}
+              </TooltipContent>
+            </Tooltip>
+          </FieldLabel>
           <output
             htmlFor={`${id}-horizon`}
-            className="text-2xl leading-none font-semibold"
+            className="rounded-full bg-glow/12 px-2.5 py-0.5 text-sm font-semibold text-glow tabular-nums"
           >
-            {horizon} h
+            {horizon === HORIZON.DEFAULT
+              ? '24 h, day-ahead'
+              : `${horizon} h ahead`}
           </output>
         </div>
+        <p id={`${id}-explain`} className="sr-only">
+          {explanation}
+        </p>
         <Slider
           id={`${id}-horizon`}
           min={HORIZON.MIN}
@@ -124,24 +111,28 @@ const FiltersBar = ({
           value={[horizon]}
           onValueChange={([value]) => onHorizonChange(value)}
           aria-label="Forecast horizon in hours"
+          aria-describedby={`${id}-explain`}
+          className="mt-3 py-1 [&_[data-slot=slider-range]]:bg-linear-to-r [&_[data-slot=slider-range]]:from-glow [&_[data-slot=slider-range]]:to-glow-2 [&_[data-slot=slider-thumb]]:size-[18px] [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:border-white [&_[data-slot=slider-thumb]]:bg-glow [&_[data-slot=slider-thumb]]:shadow-[0_0_0_4px_color-mix(in_srgb,var(--glow)_20%,transparent)] [&_[data-slot=slider-track]]:h-1.5 [&_[data-slot=slider-track]]:bg-foreground/10"
         />
-        <div className="mt-2 flex justify-between text-xs text-muted-foreground tabular-nums">
+        {/* Ticks sit at each value's true position. The inset matches half the
+            thumb width, which is where Radix places the thumb at 0 and 48. */}
+        <div className="relative mx-[9px] mt-1.5 h-4 text-[11px] text-muted-foreground tabular-nums">
           {HORIZON_TICKS.map((tick) => (
             <button
               key={tick}
               type="button"
               onClick={() => onHorizonChange(tick)}
-              className="rounded-sm px-0.5 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              style={{ left: `${(tick / HORIZON.MAX) * 100}%` }}
+              className={cn(
+                'absolute top-0 -translate-x-1/2 rounded-sm px-1 leading-4 whitespace-nowrap hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none',
+                tick === HORIZON.DEFAULT && 'font-medium text-glow',
+                tick === horizon && 'font-semibold text-foreground'
+              )}
             >
-              {tick === HORIZON.DEFAULT ? `${tick} h, day-ahead` : `${tick} h`}
+              {tick} h
             </button>
           ))}
         </div>
-        <p className="mt-3 text-sm text-ink-secondary">
-          {horizon === 0
-            ? 'Uses the most recent forecast published before each delivery hour.'
-            : `Uses the latest forecast published at least ${horizon} ${horizon === 1 ? 'hour' : 'hours'} before each delivery hour.`}
-        </p>
       </div>
     </section>
   );

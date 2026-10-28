@@ -1,7 +1,7 @@
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ReferenceDot,
   ReferenceLine,
   Tooltip,
@@ -13,6 +13,7 @@ import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HORIZON } from '@/constants';
 import { formatGW, formatSignedGW } from '@/lib/format.lib';
+import { usePrefersReducedMotion } from '@/hooks';
 import { cn } from '@/lib/utils';
 import type { HorizonPoint } from '@/types/wind.types';
 import { ACTIVE_DOT, AXIS_PROPS, gwAxisLabel, gwTicks } from '../lib/chart';
@@ -68,6 +69,7 @@ const HorizonChart = ({
   dimmed,
   onRetry,
 }: HorizonChartProps) => {
+  const reduced = usePrefersReducedMotion();
   const current = curve?.find((p) => p.horizon === horizon);
   const yTicks = gwTicks(Math.max(0, ...(curve ?? []).map((p) => p.mae)), 500);
   const labelSide =
@@ -93,7 +95,7 @@ const HorizonChart = ({
               dimmed && 'opacity-60'
             )}
           >
-            <LineChart
+            <AreaChart
               data={curve}
               margin={{ top: 24, right: 12, bottom: 0, left: 0 }}
               onClick={(state) => {
@@ -101,6 +103,20 @@ const HorizonChart = ({
                 if (Number.isFinite(next)) onHorizonChange(next);
               }}
             >
+              <defs>
+                <linearGradient id="fill-error" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="var(--series-error)"
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--series-error)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="var(--grid)" />
               <XAxis
                 dataKey="horizon"
@@ -129,20 +145,24 @@ const HorizonChart = ({
                   />
                 )}
               />
-              <Line
+              <Area
                 dataKey="mae"
                 type="monotone"
                 stroke="var(--color-mae)"
+                fill="url(#fill-error)"
                 strokeWidth={2}
                 dot={false}
                 activeDot={ACTIVE_DOT}
-                isAnimationActive={false}
+                isAnimationActive={!reduced}
+                animationBegin={100}
+                animationDuration={900}
+                animationEasing="ease-out"
               />
               {current && (
                 <ReferenceDot
                   x={current.horizon}
                   y={current.mae}
-                  r={5}
+                  r={6}
                   fill="var(--series-error)"
                   stroke="var(--card)"
                   strokeWidth={2}
@@ -156,7 +176,7 @@ const HorizonChart = ({
                   }}
                 />
               )}
-            </LineChart>
+            </AreaChart>
           </ChartContainer>
           <DataTable
             caption="Forecast error by horizon"

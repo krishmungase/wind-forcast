@@ -11,6 +11,7 @@ import {
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatGW, formatSignedGW } from '@/lib/format.lib';
+import { usePrefersReducedMotion } from '@/hooks';
 import { cn } from '@/lib/utils';
 import type { HourPoint } from '@/types/wind.types';
 import {
@@ -68,6 +69,7 @@ const HourlyErrorChart = ({
   dimmed,
   onRetry,
 }: HourlyErrorChartProps) => {
+  const reduced = usePrefersReducedMotion();
   const worst = hours?.reduce((a, b) => (b.mae > a.mae ? b : a));
   const yTicks = gwTicks(Math.max(0, ...(hours ?? []).map((h) => h.mae)), 500);
 
@@ -96,6 +98,20 @@ const HourlyErrorChart = ({
               margin={{ top: 24, right: 4, bottom: 0, left: 0 }}
               barCategoryGap="20%"
             >
+              <defs>
+                <linearGradient id="fill-error-bar" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="0%"
+                    stopColor="var(--series-error)"
+                    stopOpacity={0.95}
+                  />
+                  <stop
+                    offset="100%"
+                    stopColor="var(--series-error)"
+                    stopOpacity={0.35}
+                  />
+                </linearGradient>
+              </defs>
               <CartesianGrid vertical={false} stroke="var(--grid)" />
               <XAxis
                 dataKey="hour"
@@ -124,10 +140,13 @@ const HourlyErrorChart = ({
               />
               <Bar
                 dataKey="mae"
-                fill="var(--color-mae)"
+                fill="url(#fill-error-bar)"
                 radius={[4, 4, 0, 0]}
                 maxBarSize={24}
-                isAnimationActive={false}
+                isAnimationActive={!reduced}
+                animationBegin={100}
+                animationDuration={700}
+                animationEasing="ease-out"
               >
                 <LabelList
                   dataKey="mae"
