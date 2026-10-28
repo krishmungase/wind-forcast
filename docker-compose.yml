@@ -1,0 +1,18 @@
+# Local run: docker compose up --build, then open http://localhost:8080
+# (Vercel does not run containers; this is for running the app locally.)
+services:
+  # Reached only through the frontend's nginx at /api (docs at /api/docs).
+  backend:
+    build: ./backend
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
