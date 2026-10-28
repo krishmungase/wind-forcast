@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-heading: var(--font-sans);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Chart chrome and series, named by role. */
+  --color-actual: var(--series-actual);
+  --color-forecast: var(--series-forecast);
+  --color-grid: var(--grid);
+  --color-axis: var(--axis);
+  --color-ink-secondary: var(--ink-secondary);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+/* North Sea palette: cool grey-white plane, deep navy ink. Blue = what the
+   wind did, orange = what was forecast (validated colour-blind safe pair). */
+:root {
+  color-scheme: light;
+  --radius: 0.625rem;
+
+  --background: #f3f5f6;
+  --foreground: #13212e;
+  --card: #ffffff;
+  --card-foreground: #13212e;
+  --popover: #ffffff;
+  --popover-foreground: #13212e;
+  --primary: #13212e;
+  --primary-foreground: #f6f8f9;
+  --secondary: #e8ecef;
+  --secondary-foreground: #13212e;
+  --muted: #e8ecef;
+  --muted-foreground: #5b6875;
+  --accent: #e8ecef;
+  --accent-foreground: #13212e;
+  --destructive: #c43535;
+  --border: #dde3e8;
+  --input: #cfd7de;
+  --ring: #2a78d6;
+
+  --ink-secondary: #3f4d5a;
+  --series-actual: #2a78d6;
+  --series-forecast: #eb6834;
+  --grid: #e6ebef;
+  --axis: #c3ccd4;
+
+  --chart-1: var(--series-actual);
+  --chart-2: var(--series-forecast);
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #6250d6;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #0d151d;
+  --foreground: #e8edf1;
+  --card: #141d27;
+  --card-foreground: #e8edf1;
+  --popover: #18222d;
+  --popover-foreground: #e8edf1;
+  --primary: #e8edf1;
+  --primary-foreground: #13212e;
+  --secondary: #1d2833;
+  --secondary-foreground: #e8edf1;
+  --muted: #1d2833;
+  --muted-foreground: #95a3b0;
+  --accent: #1d2833;
+  --accent-foreground: #e8edf1;
+  --destructive: #e66767;
+  --border: #23303c;
+  --input: #2c3a47;
+  --ring: #3987e5;
+
+  --ink-secondary: #b5c1cc;
+  --series-actual: #3987e5;
+  --series-forecast: #d95926;
+  --grid: #1f2a35;
+  --axis: #35434f;
+
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #9085e9;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
